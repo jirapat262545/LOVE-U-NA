@@ -70,7 +70,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5 4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
         );
         const IconStars = ({className}) => (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M3 9h4"/><path d="M3 5h4"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M3 9h4"/><path d="M3 5h4"/></svg>
         );
         const IconGift = ({className}) => (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/></svg>
@@ -131,6 +131,7 @@
                         width: '1',
                         videoId: youtubeVideoID,
                         playerVars: {
+                            'autoplay': 1, // สั่งให้เล่นอัตโนมัติ
                             'playsinline': 1,
                             'controls': 0,
                             'disablekb': 1,
@@ -139,8 +140,16 @@
                         },
                         events: {
                             'onReady': (event) => {
-                                // พร้อมเล่นแล้ว แต่ยังไม่เล่น (รอ User Click)
-                                console.log("Player Ready");
+                                // พยายามสั่งเล่นทันทีเมื่อพร้อม
+                                event.target.playVideo();
+                                setIsPlaying(true);
+                                console.log("Player Ready & Trying to Autoplay");
+                            },
+                            'onStateChange': (event) => {
+                                // อัปเดตสถานะถ้าเพลงเริ่มเล่นได้จริง
+                                if (event.data === window.YT.PlayerState.PLAYING) {
+                                    setIsPlaying(true);
+                                }
                             }
                         }
                     });
@@ -148,19 +157,10 @@
             }, []);
 
             const handleOpenEnvelope = () => {
-                // สั่งเล่นเพลงทันทีที่กด (User Interaction) เพื่อแก้ปัญหา Mobile
+                // สั่งเล่นเพลงซ้ำอีกครั้งเมื่อกด (เพื่อความชัวร์ใน Mobile)
                 if (playerRef.current && playerRef.current.playVideo) {
                     playerRef.current.playVideo();
                     setIsPlaying(true);
-                } else {
-                    console.log("Player not ready yet");
-                    // Fallback ถ้า API ยังโหลดไม่เสร็จ พยายามเล่นอีกครั้ง
-                    setTimeout(() => {
-                         if (playerRef.current && playerRef.current.playVideo) {
-                            playerRef.current.playVideo();
-                            setIsPlaying(true);
-                         }
-                    }, 1000);
                 }
 
                 setStage('opening');
@@ -184,10 +184,21 @@
             // ข้อมูลเนื้อหา
             const coupleName = "Sroy & Bill";
             const loveLetter = `สุขสันต์วันวาเลนไทน์นะครับที่รัก 
+            
             ขอบคุณที่เข้ามาเป็นความสดใสในโลกของเค้านะ
-            ขอบคุณสำหรับทุกรอยยิ้ม ทุกเสียงหัวเราะ และทุกช่วงเวลาดีๆ
-            เค้าตั้งใจทำเว็บนี้ให้เป็นของขวัญเล็กๆ น้อยๆ 
-            หวังว่าเธอจะชอบนะ รักเธอที่สุดเลย`;
+            ขอบคุณสำหรับทุกรอยยิ้ม ทุกเสียงหัวเราะ และทุกช่วงเวลาดีๆ ที่เรามีให้กัน
+            ตั้งแต่วันแรกที่ได้รู้จัก จนถึงวันนี้ ไม่มีวันไหนเลยที่เค้าไม่ดีใจที่มีเธออยู่ข้างๆ
+
+            ขอบคุณที่คอยรับฟัง และเข้าใจเค้าในวันที่เค้าอาจจะไม่น่ารัก
+            ขอบคุณที่เป็นกำลังใจสำคัญในทุกก้าวของชีวิต
+            ทุกอุปสรรคที่ผ่านเข้ามา มันพิสูจน์ให้เห็นว่าความรักของเราแข็งแรงแค่ไหน
+
+            ในวันนี้และตลอดไป เค้าสัญญาว่าจะดูแลรักษาหัวใจดวงนี้ให้ดีที่สุด
+            จะคอยเติมความหวาน และสร้างความทรงจำดีๆ ร่วมกันไปเรื่อยๆ นะ
+            ไม่ว่าวันข้างหน้าจะเจออะไร ขอให้รู้ไว้ว่าเธอจะมีเค้าอยู่ข้างๆ เสมอ
+
+            เค้าตั้งใจทำเว็บนี้ให้เป็นของขวัญเล็กๆ น้อยๆ แทนความรู้สึกทั้งหมดที่มี
+            หวังว่าเธอจะชอบนะ... รักเธอที่สุดเลยครับ ❤️`;
 
             const promises = [
                 { icon: <IconHeart className="w-6 h-6 text-white" />, color: "bg-rose-400", title: "ใส่ใจเสมอ", text: "เค้าสัญญาว่าจะรับฟังและใส่ใจความรู้สึกของเธอเสมอ ไม่ว่าจะเรื่องเล็กหรือเรื่องใหญ่" },
