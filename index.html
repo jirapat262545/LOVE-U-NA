@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sroy & Bill - Valentine's Surprise</title>
+    
+    <!-- 1. นำเข้า Tailwind CSS (สำหรับตกแต่ง) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. นำเข้า React และ ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- 3. นำเข้า Babel (เพื่อให้เขียน React ใน HTML ได้) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- 4. ฟอนต์ภาษาไทยและอังกฤษสวยๆ -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=Great+Vibes&display=swap" rel="stylesheet">
+
+    <!-- ปรับแต่ง CSS เพิ่มเติม -->
+    <style>
+        body { font-family: 'Sarabun', sans-serif; overflow-x: hidden; background-color: #fff5f7; }
+        .font-script { font-family: 'Great Vibes', cursive; }
+        
+        /* Animation: หัวใจลอย */
+        @keyframes floatUp {
+            0% { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+        .floating-heart { position: absolute; animation: floatUp linear infinite; }
+
+        /* Animation: ก้อนสีฟุ้งๆ (Blobs) */
+        @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob { animation: blob 7s infinite; }
+        .animation-delay-2000 { animation-delay: 2s; }
+        .animation-delay-4000 { animation-delay: 4s; }
+
+        /* Animation: การแสดงผล */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.8s ease-out forwards; }
+        
+        @keyframes scaleIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .animate-scale-in { animation: scaleIn 1s ease-out forwards; }
+
+        /* ซ่อน Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #fff0f5; }
+        ::-webkit-scrollbar-thumb { background: #fecdd3; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <!-- จุดที่ React จะทำงาน -->
+    <div id="root"></div>
+
+    <!-- เขียน React Code ตรงนี้ -->
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- 🖼️ ส่วนไอคอน (SVG) สร้างเองไม่ต้องง้อ Library ---
+        const IconHeart = ({className}) => (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5 4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+        );
+        const IconStars = ({className}) => (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M3 9h4"/><path d="M3 5h4"/></svg>
+        );
+        const IconGift = ({className}) => (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/></svg>
+        );
+        const IconCamera = ({className}) => (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+        );
+        const IconMusic = ({className}) => (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        );
+        const IconArrowRight = ({className}) => (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        );
+        const IconSparkles = ({className}) => (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/></svg>
+        );
+        const IconPlay = ({className}) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="5 3 19 12 5 21 5 3"/></svg> );
+        const IconPause = ({className}) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> );
+
+
+        // --- ✨ ตัวแอปหลัก (Main App) ---
+        const App = () => {
+            const [stage, setStage] = useState('envelope');
+            const [showPromises, setShowPromises] = useState(false);
+            const [floatingHearts, setFloatingHearts] = useState([]);
+            const [isPlaying, setIsPlaying] = useState(false);
+
+            // 🎵 ตั้งค่า YouTube ID เพลงตรงนี้ (เชื้อไฟ - HUGO)
+            const youtubeVideoID = "wJex6piMxKA";
+
+            // 🐱 ตั้งค่ารูปแมวตรงนี้ (ถ้าไม่มีรูป ให้ปล่อยว่างไว้ หรือใส่ URL รูปจากเน็ต)
+            // ถ้าคุณมีไฟล์รูป ให้เอาไฟล์ไปวางข้างๆ index.html แล้วใส่ชื่อไฟล์ เช่น "cat-hugging.png"
+            const catImage = "cat-hugging.png"; 
+
+            useEffect(() => {
+                const hearts = Array.from({ length: 30 }).map((_, i) => ({
+                    id: i,
+                    left: Math.random() * 100,
+                    delay: Math.random() * 5,
+                    duration: 15 + Math.random() * 10,
+                    size: Math.random() * 1.5 + 0.5,
+                }));
+                setFloatingHearts(hearts);
+            }, []);
+
+            const handleOpenEnvelope = () => {
+                setIsPlaying(true);
+                setStage('opening');
+                setTimeout(() => {
+                    setStage('content');
+                    window.scrollTo(0, 0);
+                }, 1500);
+            };
+
+            const toggleMusic = () => {
+                setIsPlaying(!isPlaying);
+            };
+
+            // ข้อมูลเนื้อหา
+            const coupleName = "Sroy & Bill";
+            const loveLetter = `สุขสันต์วันวาเลนไทน์นะครับที่รัก 
+            ขอบคุณที่เข้ามาเป็นความสดใสในโลกของเค้านะ
+            ขอบคุณสำหรับทุกรอยยิ้ม ทุกเสียงหัวเราะ และทุกช่วงเวลาดีๆ
+            เค้าตั้งใจทำเว็บนี้ให้เป็นของขวัญเล็กๆ น้อยๆ 
+            หวังว่าเธอจะชอบนะ รักเธอที่สุดเลย`;
+
+            const promises = [
+                { icon: <IconHeart className="w-6 h-6 text-white" />, color: "bg-rose-400", title: "ใส่ใจเสมอ", text: "เค้าสัญญาว่าจะรับฟังและใส่ใจความรู้สึกของเธอเสมอ ไม่ว่าจะเรื่องเล็กหรือเรื่องใหญ่" },
+                { icon: <IconStars className="w-6 h-6 text-white" />, color: "bg-amber-400", title: "เป็นกำลังใจ", text: "สัญญาว่าจะเป็นกองเชียร์เบอร์ 1 ของเธอในทุกๆ เรื่องที่เธอทำ" },
+                { icon: <IconGift className="w-6 h-6 text-white" />, color: "bg-purple-400", title: "เติมความหวาน", text: "สัญญาว่าจะพาไปกินของอร่อยๆ และเติมความหวานให้กันบ่อยๆ นะ" },
+                { icon: <IconCamera className="w-6 h-6 text-white" />, color: "bg-sky-400", title: "สร้างความทรงจำ", text: "สัญญาว่าจะจับมือเธอเดินไปข้างหน้า และสร้างความทรงจำดีๆ ด้วยกันตลอดไป" },
+            ];
+
+            return (
+                <div className="min-h-screen font-sans text-slate-800 overflow-x-hidden relative">
+                    
+                    {/* YouTube Player แบบซ่อน */}
+                    {isPlaying && (
+                        <div className="fixed w-1 h-1 opacity-0 pointer-events-none overflow-hidden bottom-0 right-0">
+                            <iframe 
+                                width="100%" height="100%" 
+                                src={`https://www.youtube.com/embed/${youtubeVideoID}?autoplay=1&loop=1&playlist=${youtubeVideoID}&controls=0&showinfo=0&disablekb=1&modestbranding=1`} 
+                                title="Music" frameBorder="0" allow="autoplay; encrypted-media" allowFullScreen 
+                            />
+                        </div>
+                    )}
+
+                    {/* Dynamic Background */}
+                    <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+                        <div className="absolute top-0 -left-4 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+                        <div className="absolute top-0 -right-4 w-96 h-96 bg-yellow-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+                        <div className="absolute -bottom-32 left-20 w-96 h-96 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
+                        {floatingHearts.map((heart) => (
+                            <div key={heart.id} className="floating-heart text-rose-300" style={{ left: `${heart.left}%`, animationDelay: `${heart.delay}s`, animationDuration: `${heart.duration}s`, fontSize: `${heart.size}rem` }}>♥</div>
+                        ))}
+                    </div>
+
+                    {/* ปุ่มควบคุมเพลง */}
+                    <div className="fixed bottom-6 right-6 z-50 transition-all hover:scale-110">
+                        <div onClick={toggleMusic} className={`bg-white/90 backdrop-blur-md p-3 pr-5 rounded-full shadow-lg border border-pink-100 flex items-center gap-3 cursor-pointer ${isPlaying ? 'ring-2 ring-rose-200' : ''}`}>
+                            <div className={`w-8 h-8 rounded-full bg-gradient-to-tr from-rose-400 to-purple-500 flex items-center justify-center ${isPlaying ? 'animate-spin-slow' : ''}`}>
+                                <IconMusic className="w-3.5 h-3.5 text-white" />
+                            </div>
+                            <div className="hidden md:block"><p className="text-xs font-thai text-gray-500">{isPlaying ? 'Playing: เชื้อไฟ' : 'Paused'}</p></div>
+                            {isPlaying ? <IconPause className="w-3.5 h-3.5 text-rose-400" /> : <IconPlay className="w-3.5 h-3.5 text-gray-400" />}
+                        </div>
+                    </div>
+
+                    {/* ฉาก 1: ซองจดหมาย */}
+                    {(stage === 'envelope' || stage === 'opening') && (
+                        <div className={`fixed inset-0 z-40 flex flex-col items-center justify-center transition-opacity duration-1000 ${stage === 'opening' ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                            <div onClick={handleOpenEnvelope} className="relative cursor-pointer group">
+                                <div className="w-80 h-52 bg-gradient-to-br from-rose-500 to-rose-600 rounded-lg shadow-2xl relative z-10 flex items-center justify-center overflow-hidden transition-transform duration-500 group-hover:scale-105">
+                                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+                                    <div className="w-16 h-16 bg-red-700 rounded-full shadow-lg flex items-center justify-center border-4 border-red-800/50 z-20">
+                                        <IconHeart className="w-8 h-8 text-red-200/80 fill-current" />
+                                    </div>
+                                    <p className="absolute bottom-4 font-script text-2xl text-rose-100/90 tracking-wider">Open Me</p>
+                                </div>
+                                <div className="absolute -top-1 left-0 w-0 h-0 border-l-[160px] border-r-[160px] border-t-[110px] border-l-transparent border-r-transparent border-t-rose-700 z-20 filter drop-shadow-md origin-top transition-all duration-700 group-hover:rotate-x-180"></div>
+                            </div>
+                            <div className="mt-12 text-center animate-bounce"><p className="font-thai text-rose-600/80 text-lg">มีของขวัญส่งถึงคุณ {coupleName}</p></div>
+                        </div>
+                    )}
+
+                    {/* ฉาก 2: เนื้อหาหลัก */}
+                    {stage === 'content' && (
+                        <div className="relative z-10 max-w-4xl mx-auto min-h-screen flex flex-col animate-fade-in">
+                            <header className="h-[55vh] relative flex items-center justify-center overflow-hidden">
+                                <div className="absolute inset-0 z-0">
+                                    <img src="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=2000&auto=format&fit=crop" alt="Bg" className="w-full h-full object-cover opacity-90 blur-[1px]" />
+                                    <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-[#fff5f7]"></div>
+                                </div>
+                                <div className="relative z-10 text-center px-4 mt-16">
+                                    <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white/20 backdrop-blur-md border border-white/40 mb-8 shadow-lg">
+                                        <IconSparkles className="w-4 h-4 text-yellow-300 animate-pulse" />
+                                        <span className="font-thai text-white tracking-widest text-sm font-medium uppercase drop-shadow-md">Valentine's Day 2026</span>
+                                        <IconSparkles className="w-4 h-4 text-yellow-300 animate-pulse" />
+                                    </div>
+                                    <h1 className="font-script text-6xl md:text-8xl lg:text-9xl leading-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-rose-100 to-rose-200 drop-shadow-[0_4px_8px_rgba(225,29,72,0.6)] py-4 animate-scale-in">{coupleName}</h1>
+                                    <p className="font-thai text-rose-50 text-xl md:text-2xl font-light tracking-wide drop-shadow-md mt-4">My Forever Valentine</p>
+                                </div>
+                            </header>
+
+                            <main className="px-6 pb-24 -mt-20 relative z-20">
+                                {/* รูปแมว */}
+                                <div className="flex justify-center mb-8 relative z-30 -mt-10">
+                                    <img 
+                                        src={catImage} 
+                                        onError={(e) => e.target.style.display='none'} 
+                                        alt="Cat Couple" 
+                                        className="w-64 h-auto drop-shadow-2xl hover:scale-105 transition-transform duration-500" 
+                                    />
+                                </div>
+
+                                <section className="max-w-2xl mx-auto mb-24">
+                                    <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-white/60 relative transform hover:rotate-1 transition-transform duration-500">
+                                        <div className="text-center">
+                                            <IconSparkles className="w-8 h-8 text-yellow-400 mx-auto mb-6 animate-pulse" />
+                                            <h2 className="font-script text-5xl text-rose-500 mb-8">My Dearest...</h2>
+                                            <p className="font-thai text-lg md:text-xl leading-loose text-slate-600 whitespace-pre-line">{loveLetter}</p>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                {!showPromises ? (
+                                    <div className="text-center py-12">
+                                        <button onClick={() => setShowPromises(true)} className="group relative inline-flex items-center justify-center px-8 py-4 font-thai text-lg font-medium tracking-tighter text-white bg-rose-500 rounded-full overflow-hidden transition-all duration-300 hover:bg-rose-600 hover:scale-105 hover:shadow-xl hover:shadow-rose-300/50">
+                                            <span className="relative flex items-center gap-2">เปิดคำสัญญาของเค้า <IconArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></span>
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <section className="max-w-4xl mx-auto animate-fade-in">
+                                        <div className="text-center mb-12"><h2 className="font-script text-6xl text-rose-400 mb-4">Our Promises</h2><p className="font-thai text-slate-400">สิ่งเล็กๆ ที่เค้าอยากทำให้เธอ...</p></div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            {promises.map((item, idx) => (
+                                                <div key={idx} className="group bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl border border-slate-50 transition-all duration-300 hover:-translate-y-2" style={{ animation: `fadeIn 0.6s ease-out ${idx * 0.15}s backwards` }}>
+                                                    <div className="flex items-start gap-4">
+                                                        <div className={`${item.color} p-4 rounded-2xl shadow-md group-hover:scale-110 transition-transform duration-300`}>{item.icon}</div>
+                                                        <div><h3 className="font-thai text-xl font-bold text-slate-700 mb-2">{item.title}</h3><p className="font-thai text-slate-500 leading-relaxed text-sm">{item.text}</p></div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="mt-20 text-center pb-20">
+                                            <div className="inline-block p-1 rounded-full bg-gradient-to-r from-rose-300 to-purple-300">
+                                                <button onClick={() => alert('รักเธอที่สุดในโลกเลยยยย! ❤️')} className="px-10 py-4 bg-white rounded-full font-thai text-rose-500 font-bold hover:bg-rose-50 transition-colors shadow-inner">
+                                                    Love You Forever ❤️
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </section>
+                                )}
+                            </main>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
